@@ -24,7 +24,7 @@ def create_app():
     app = Flask(__name__)
 
     # Secret key for flash messages etc.
-    # In real prod I would put this in env vars, but for the test it's okay like this.
+    # For a real deploy I would put this in an env var, but for now it's fine.
     app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY", "change-me-in-real-deploy")
 
     # SQLite database file
@@ -48,78 +48,6 @@ def create_app():
 
     # Make helper accessible inside views
     app.log_activity = log_activity
-
-    # -------------- TEMP: init-db route for Render (no shell) --------------
-
-    @app.route("/init-db")
-    def init_db_route():
-        # This route is just to initialize the DB on Render where we don't have shell access.
-        # Hit it once in the browser, then ideally remove or comment it out and redeploy.
-        try:
-            db.drop_all()
-            db.create_all()
-
-            # Create admin
-            admin = AdminUser(name="Istanbul Gasht Admin", email="admin@istanbulgasht.com")
-            db.session.add(admin)
-
-            # Sample products
-            p1 = Product(
-                name="Classic Istanbul T-Shirt",
-                price=29.99,
-                category="T-Shirts",
-                stock=50,
-                description="Simple white tee with a minimal Istanbul skyline print.",
-            )
-            p2 = Product(
-                name="Bosporus Hoodie",
-                price=59.99,
-                category="Hoodies",
-                stock=20,
-                description="Cozy hoodie inspired by Bosporus nights.",
-            )
-            p3 = Product(
-                name="Grand Bazaar Scarf",
-                price=19.99,
-                category="Accessories",
-                stock=100,
-                description="Light scarf with patterns inspired by the Grand Bazaar.",
-            )
-            db.session.add_all([p1, p2, p3])
-            db.session.commit()
-
-            # Sample orders (last 7 days)
-            today = date.today()
-            products = [p1, p2, p3]
-
-            for i in range(7):
-                day = today - timedelta(days=i)
-                for j in range(i % 3):
-                    product = products[j % 3]
-                    quantity = j + 1
-                    total = product.price * quantity
-                    db.session.add(
-                        Order(
-                            product_id=product.id,
-                            quantity=quantity,
-                            total_amount=total,
-                            order_date=day,
-                        )
-                    )
-
-            db.session.add(
-                ActivityLog(
-                    action_type="system_init",
-                    description="Database initialized on Render.",
-                )
-            )
-            db.session.commit()
-
-            return "Database initialized successfully on Render."
-
-        except Exception as e:
-            # If something breaks, just show a friendly-ish text message.
-            return f"Error while initializing DB: {e}"
 
     # -------------- Dashboard route --------------
 
@@ -163,7 +91,7 @@ def create_app():
                 * 100
             )
         else:
-            # If no previous data, I'll just show 0 so it doesn't blow up.
+            # If no previous data, I just show 0 so it does not explode.
             weekly_growth = 0
 
         # Sales chart: 7-day trend (last 7 days including today)
@@ -375,6 +303,80 @@ def create_app():
 
         return render_template("profile.html", admin=admin)
 
+    # -------------- Init DB route for Render (no shell) --------------
+
+    @app.route("/init-db")
+    def init_db_route():
+        # This route is just to initialize the DB on Render free plan.
+        # You can hit it once in the browser, then optionally remove it.
+        try:
+            db.drop_all()
+            db.create_all()
+
+            # Create admin
+            admin = AdminUser(
+                name="Istanbul Gasht Admin", email="admin@istanbulgasht.com"
+            )
+            db.session.add(admin)
+
+            # Sample products
+            p1 = Product(
+                name="Classic Istanbul T-Shirt",
+                price=29.99,
+                category="T-Shirts",
+                stock=50,
+                description="Simple white tee with a minimal Istanbul skyline print.",
+            )
+            p2 = Product(
+                name="Bosporus Hoodie",
+                price=59.99,
+                category="Hoodies",
+                stock=20,
+                description="Cozy hoodie inspired by Bosporus nights.",
+            )
+            p3 = Product(
+                name="Grand Bazaar Scarf",
+                price=19.99,
+                category="Accessories",
+                stock=100,
+                description="Light scarf with patterns inspired by the Grand Bazaar.",
+            )
+            db.session.add_all([p1, p2, p3])
+            db.session.commit()
+
+            # Sample orders (last 7 days)
+            today = date.today()
+            products = [p1, p2, p3]
+
+            for i in range(7):
+                day = today - timedelta(days=i)
+                for j in range(i % 3):
+                    product = products[j % 3]
+                    quantity = j + 1
+                    total = product.price * quantity
+                    db.session.add(
+                        Order(
+                            product_id=product.id,
+                            quantity=quantity,
+                            total_amount=total,
+                            order_date=day,
+                        )
+                    )
+
+            db.session.add(
+                ActivityLog(
+                    action_type="system_init",
+                    description="Database initialized on Render.",
+                )
+            )
+            db.session.commit()
+
+            return "Database initialized successfully on Render."
+
+        except Exception as e:
+            # I keep the error message simple so it's understandable.
+            return f"Error initializing database: {e}", 500
+
     # -------------- Serve uploaded files (if needed) --------------
 
     @app.route("/uploads/<filename>")
@@ -396,7 +398,7 @@ def create_app():
     return app
 
 
-# create the app object for gunicorn / Render
+# Expose app for gunicorn / Render
 app = create_app()
 
 if __name__ == "__main__":
