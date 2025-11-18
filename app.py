@@ -1,6 +1,4 @@
 # app.py
-# Main Flask app for Istanbul Gasht Store Admin Dashboard.
-# Trying to keep things simple and readable so it's easy to follow in an assessment.
 
 import os
 from datetime import date, timedelta
@@ -23,8 +21,6 @@ from models import db, Product, AdminUser, Order, ActivityLog
 def create_app():
     app = Flask(__name__)
 
-    # Secret key for flash messages etc.
-    # For a real deploy I would put this in an env var, but for now it's fine.
     app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY", "change-me-in-real-deploy")
 
     # SQLite database file
@@ -38,15 +34,12 @@ def create_app():
 
     db.init_app(app)
 
-    # -------------- Helper: log activity --------------
-
     def log_activity(action_type, description):
         """Just a small helper so I don't repeat this everywhere."""
         entry = ActivityLog(action_type=action_type, description=description)
         db.session.add(entry)
         db.session.commit()
 
-    # Make helper accessible inside views
     app.log_activity = log_activity
 
     # -------------- Dashboard route --------------
@@ -54,7 +47,7 @@ def create_app():
     @app.route("/")
     @app.route("/dashboard")
     def dashboard():
-        # KPI: total orders, total revenue, total products
+        
         total_orders = db.session.query(func.count(Order.id)).scalar() or 0
         total_revenue = (
             db.session.query(func.coalesce(func.sum(Order.total_amount), 0)).scalar()
@@ -62,7 +55,7 @@ def create_app():
         )
         total_products = db.session.query(func.count(Product.id)).scalar() or 0
 
-        # Weekly growth: compare last 7 days vs previous 7 days
+        # Weekly growth
         today = date.today()
         current_start = today - timedelta(days=6)
         prev_start = current_start - timedelta(days=7)
@@ -94,13 +87,12 @@ def create_app():
             # If no previous data, I just show 0 so it does not explode.
             weekly_growth = 0
 
-        # Sales chart: 7-day trend (last 7 days including today)
         chart_labels = []
         chart_data = []
 
         for i in range(6, -1, -1):
             day = today - timedelta(days=i)
-            day_label = day.strftime("%b %d")  # e.g. "Nov 18"
+            day_label = day.strftime("%b %d")  
             day_revenue = (
                 db.session.query(func.coalesce(func.sum(Order.total_amount), 0))
                 .filter(Order.order_date == day)
@@ -110,7 +102,7 @@ def create_app():
             chart_labels.append(day_label)
             chart_data.append(round(day_revenue, 2))
 
-        # Recent activity feed (last 10)
+        
         recent_activities = (
             ActivityLog.query.order_by(ActivityLog.created_at.desc()).limit(10).all()
         )
@@ -142,7 +134,7 @@ def create_app():
             stock_raw = request.form.get("stock", "").strip()
             description = request.form.get("description", "").strip()
 
-            # simple validation
+            
             if not name or not price_raw or not category or not stock_raw:
                 flash("Please fill in all required fields.", "error")
                 return redirect(url_for("create_product"))
@@ -158,7 +150,6 @@ def create_app():
             image_filename = None
 
             if image_file and image_file.filename:
-                # I'm just saving the file with a random name to avoid collisions.
                 ext = os.path.splitext(image_file.filename)[1]
                 image_filename = f"{uuid4().hex}{ext}"
                 try:
@@ -265,7 +256,6 @@ def create_app():
         # For this simple CRM we assume only one admin with id=1.
         admin = AdminUser.query.get(1)
         if not admin:
-            # Friendly fallback if the seed didn't create an admin for some reason.
             admin = AdminUser(id=1, name="Admin", email="admin@example.com")
             db.session.add(admin)
             db.session.commit()
@@ -304,16 +294,12 @@ def create_app():
 
         return render_template("profile.html", admin=admin)
 
-    # -------------- Init DB route for Render (no shell) --------------
-
-        # -------------- Init DB route for Render (no shell) --------------
+    # -------------- Init DB route for Render  --------------
 
     @app.route("/init-db")
     def init_db_route():
-        # This route is just to initialize the DB on Render free plan.
-        # You can hit it once in the browser. If it's already initialized, it will not duplicate things.
+       
         try:
-            # Make sure tables exist
             db.create_all()
 
             # If admin already exists, assume DB is initialized and bail out nicely
@@ -383,10 +369,8 @@ def create_app():
             return "Database initialized successfully on Render."
 
         except Exception as e:
-            # I keep the error message simple so it's understandable.
             return f"Error initializing database: {e}", 500
 
-    # -------------- Serve uploaded files (if needed) --------------
 
     @app.route("/uploads/<filename>")
     def uploaded_file(filename):
@@ -401,15 +385,13 @@ def create_app():
 
     @app.errorhandler(500)
     def internal_error(e):
-        # I don't want to expose errors here; just show a friendly message.
         return render_template("errors/500.html"), 500
 
     return app
 
 
-# Expose app for gunicorn / Render
+
 app = create_app()
 
 if __name__ == "__main__":
-    # Running in debug mode locally to speed things up.
     app.run(debug=True)
