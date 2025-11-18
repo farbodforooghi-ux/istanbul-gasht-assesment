@@ -1,0 +1,7 @@
+/* custom.css */
+/* I'm keeping this file very light. Most of the design is just Tailwind. */
+
+/* Just slightly smoother font rendering. */
+body {
+  -webkit-font-smoothing: antialiased;
+}

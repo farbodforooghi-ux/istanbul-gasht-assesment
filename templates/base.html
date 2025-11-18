@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Istanbul Gasht Admin</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <!-- Tailwind CDN (for this assessment, CDN keeps things super simple) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Custom tiny CSS if you want -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/custom.css') }}" />
+
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  </head>
+  <body class="bg-slate-100 text-slate-900">
+    <div class="min-h-screen flex">
+      <!-- Sidebar -->
+      <aside
+        class="hidden md:flex md:flex-col w-64 bg-slate-900 text-slate-100 shadow-lg"
+      >
+        <div class="px-6 py-4 border-b border-slate-800">
+          <h1 class="text-xl font-semibold tracking-tight">
+            Istanbul Gasht Store
+          </h1>
+          <p class="text-xs text-slate-400">Admin Dashboard</p>
+        </div>
+        <nav class="flex-1 px-4 py-6 space-y-2">
+          <a
+            href="{{ url_for('dashboard') }}"
+            class="flex items-center px-3 py-2 rounded-lg text-sm hover:bg-slate-800 {% if request.endpoint == 'dashboard' %}bg-slate-800{% endif %}"
+          >
+            <span class="mr-2">📊</span>
+            <span>Dashboard</span>
+          </a>
+          <a
+            href="{{ url_for('list_products') }}"
+            class="flex items-center px-3 py-2 rounded-lg text-sm hover:bg-slate-800 {% if 'products' in request.endpoint %}bg-slate-800{% endif %}"
+          >
+            <span class="mr-2">🧥</span>
+            <span>Products</span>
+          </a>
+          <a
+            href="{{ url_for('edit_profile') }}"
+            class="flex items-center px-3 py-2 rounded-lg text-sm hover:bg-slate-800 {% if request.endpoint == 'edit_profile' %}bg-slate-800{% endif %}"
+          >
+            <span class="mr-2">👤</span>
+            <span>Admin Profile</span>
+          </a>
+        </nav>
+        <div class="px-4 py-4 border-t border-slate-800 text-xs text-slate-400">
+          <p>© {{ 2025 }} Istanbul Gasht Store</p>
+        </div>
+      </aside>
+
+      <!-- Main content -->
+      <div class="flex-1 flex flex-col">
+        <!-- Top bar -->
+        <header class="w-full flex items-center justify-between px-4 md:px-8 py-3 bg-white border-b border-slate-200">
+          <div class="flex items-center space-x-2">
+            <button
+              class="md:hidden inline-flex items-center justify-center rounded-md border border-slate-200 px-2 py-1 text-sm"
+              onclick="document.getElementById('mobile-sidebar').classList.remove('hidden')"
+            >
+              ☰
+            </button>
+            <h2 class="text-lg font-semibold">
+              {% block page_title %}Dashboard{% endblock %}
+            </h2>
+          </div>
+          <div class="flex items-center space-x-3 text-sm text-slate-600">
+            <span>Logged in as Admin</span>
+          </div>
+        </header>
+
+        <!-- Flash messages -->
+        <main class="flex-1 px-4 md:px-8 py-6">
+          {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+          <div class="space-y-2 mb-4">
+            {% for category, msg in messages %}
+            <div
+              class="px-4 py-3 rounded-lg text-sm {% if category == 'success' %}bg-emerald-50 text-emerald-800 border border-emerald-100{% elif category == 'error' %}bg-rose-50 text-rose-800 border border-rose-100{% else %}bg-slate-50 text-slate-800 border border-slate-100{% endif %}"
+            >
+              {{ msg }}
+            </div>
+            {% endfor %}
+          </div>
+          {% endif %}
+          {% endwith %}
+
+          {% block content %}{% endblock %}
+        </main>
+      </div>
+    </div>
+
+    <!-- Mobile sidebar (simple) -->
+    <div
+      id="mobile-sidebar"
+      class="fixed inset-0 bg-black bg-opacity-40 z-40 hidden"
+    >
+      <div class="absolute left-0 top-0 bottom-0 w-64 bg-slate-900 text-slate-100">
+        <div class="flex items-center justify-between px-4 py-3 border-b border-slate-800">
+          <span class="font-semibold text-sm">Istanbul Gasht Admin</span>
+          <button
+            class="text-slate-400 text-lg"
+            onclick="document.getElementById('mobile-sidebar').classList.add('hidden')"
+          >
+            ✕
+          </button>
+        </div>
+        <nav class="px-3 py-4 space-y-2">
+          <a
+            href="{{ url_for('dashboard') }}"
+            class="block px-3 py-2 rounded-lg text-sm hover:bg-slate-800"
+          >
+            📊 Dashboard
+          </a>
+          <a
+            href="{{ url_for('list_products') }}"
+            class="block px-3 py-2 rounded-lg text-sm hover:bg-slate-800"
+          >
+            🧥 Products
+          </a>
+          <a
+            href="{{ url_for('edit_profile') }}"
+            class="block px-3 py-2 rounded-lg text-sm hover:bg-slate-800"
+          >
+            👤 Admin Profile
+          </a>
+        </nav>
+      </div>
+    </div>
+  </body>
+</html>

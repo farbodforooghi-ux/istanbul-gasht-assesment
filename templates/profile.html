@@ -1,0 +1,91 @@
+{% extends "base.html" %}
+
+{% block page_title %}Admin Profile{% endblock %}
+
+{% block content %}
+<div class="max-w-xl mx-auto">
+  <h2 class="text-lg font-semibold mb-1">Admin Profile</h2>
+  <p class="text-xs text-slate-500 mb-4">
+    Update your name, email, and avatar. This does not affect any public-facing
+    content, only the admin dashboard.
+  </p>
+
+  <form
+    action="{{ url_for('edit_profile') }}"
+    method="POST"
+    enctype="multipart/form-data"
+    class="bg-white rounded-xl shadow-sm border border-slate-100 p-4 space-y-4"
+  >
+    <div class="flex items-center space-x-4">
+      {% if admin.avatar_filename %}
+      <img
+        src="{{ url_for('static', filename='uploads/' ~ admin.avatar_filename) }}"
+        alt="Admin avatar"
+        class="w-14 h-14 rounded-full object-cover border border-slate-200"
+      />
+      {% else %}
+      <div
+        class="w-14 h-14 rounded-full bg-slate-900 text-slate-50 flex items-center justify-center text-lg font-semibold"
+      >
+        {{ admin.name[:1] if admin.name else 'A' }}
+      </div>
+      {% endif %}
+      <div>
+        <p class="text-sm font-medium">{{ admin.name }}</p>
+        <p class="text-xs text-slate-500">{{ admin.email }}</p>
+      </div>
+    </div>
+
+    <div>
+      <label class="block text-xs font-medium text-slate-600 mb-1"
+        >Name *</label
+      >
+      <input
+        type="text"
+        name="name"
+        value="{{ admin.name }}"
+        class="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-slate-900"
+        required
+      />
+    </div>
+
+    <div>
+      <label class="block text-xs font-medium text-slate-600 mb-1"
+        >Email *</label
+      >
+      <input
+        type="email"
+        name="email"
+        value="{{ admin.email }}"
+        class="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-slate-900"
+        required
+      />
+    </div>
+
+    <div>
+      <label class="block text-xs font-medium text-slate-600 mb-1"
+        >Avatar (optional)</label
+      >
+      <input
+        type="file"
+        name="avatar"
+        accept="image/*"
+        class="w-full text-sm"
+      />
+      <p class="mt-1 text-xs text-slate-400">
+        Square images look best here. If upload fails, I keep the current
+        avatar.
+      </p>
+    </div>
+
+    <div class="flex justify-end pt-2">
+      <button
+        type="submit"
+        class="inline-flex items-center px-4 py-2 rounded-lg bg-slate-900 text-slate-50 text-sm hover:bg-slate-800"
+      >
+        Save changes
+      </button>
+    </div>
+  </form>
+</div>
+{% endblock %}

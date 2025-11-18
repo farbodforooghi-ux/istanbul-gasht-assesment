@@ -1,0 +1,147 @@
+{% extends "base.html" %}
+
+{% block page_title %}Dashboard{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+  <!-- KPI Cards -->
+  <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+    <!-- Total Orders -->
+    <div class="bg-white rounded-xl shadow-sm p-4 border border-slate-100">
+      <p class="text-xs uppercase tracking-wide text-slate-500 mb-2">
+        Total Orders
+      </p>
+      <p class="text-2xl font-semibold">{{ total_orders }}</p>
+      <p class="text-xs text-slate-400 mt-1">Across all time</p>
+    </div>
+
+    <!-- Total Revenue -->
+    <div class="bg-white rounded-xl shadow-sm p-4 border border-slate-100">
+      <p class="text-xs uppercase tracking-wide text-slate-500 mb-2">
+        Total Revenue
+      </p>
+      <p class="text-2xl font-semibold">
+        ${{ "%.2f"|format(total_revenue) }}
+      </p>
+      <p class="text-xs text-slate-400 mt-1">All orders combined</p>
+    </div>
+
+    <!-- Total Products -->
+    <div class="bg-white rounded-xl shadow-sm p-4 border border-slate-100">
+      <p class="text-xs uppercase tracking-wide text-slate-500 mb-2">
+        Total Products
+      </p>
+      <p class="text-2xl font-semibold">{{ total_products }}</p>
+      <p class="text-xs text-slate-400 mt-1">Active in catalog</p>
+    </div>
+
+    <!-- Weekly Growth -->
+    <div class="bg-white rounded-xl shadow-sm p-4 border border-slate-100">
+      <p class="text-xs uppercase tracking-wide text-slate-500 mb-2">
+        Weekly Growth
+      </p>
+      {% set growth = "%.1f"|format(weekly_growth) %}
+      <p class="text-2xl font-semibold {% if weekly_growth >= 0 %}text-emerald-600{% else %}text-rose-600{% endif %}">
+        {{ growth }}%
+      </p>
+      <p class="text-xs text-slate-400 mt-1">
+        vs previous 7 days
+      </p>
+    </div>
+  </div>
+
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <!-- Sales chart -->
+    <div class="bg-white rounded-xl shadow-sm p-4 border border-slate-100 lg:col-span-2">
+      <div class="flex items-center justify-between mb  -2">
+        <div>
+          <h3 class="text-sm font-semibold text-slate-800">
+            7-Day Sales Trend
+          </h3>
+          <p class="text-xs text-slate-400">
+            Daily revenue for the last week
+          </p>
+        </div>
+      </div>
+      <div class="mt-4">
+        {% if chart_data|length == 0 %}
+        <p class="text-sm text-slate-500">
+          No sales data yet. Once orders start coming in, you’ll see them here.
+        </p>
+        {% else %}
+        <canvas id="salesChart" class="w-full h-64"></canvas>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Recent Activity -->
+    <div class="bg-white rounded-xl shadow-sm p-4 border border-slate-100">
+      <div class="flex items-center justify-between mb-2">
+        <h3 class="text-sm font-semibold text-slate-800">
+          Recent Activity
+        </h3>
+        <span class="text-xs text-slate-400">Last 10 actions</span>
+      </div>
+
+      {% if recent_activities %}
+      <ul class="divide-y divide-slate-100">
+        {% for activity in recent_activities %}
+        <li class="py-2">
+          <p class="text-sm text-slate-800">
+            {{ activity.description }}
+          </p>
+          <p class="text-xs text-slate-400">
+            {{ activity.created_at.strftime("%Y-%m-%d %H:%M") }}
+          </p>
+        </li>
+        {% endfor %}
+      </ul>
+      {% else %}
+      <p class="text-sm text-slate-500">
+        No activity yet. Once you start creating products or updating your
+        profile, you’ll see a timeline here.
+      </p>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+{% if chart_data|length > 0 %}
+<script>
+  // I'm just grabbing the labels and data from the server and feeding them to Chart.js.
+  const salesLabels = {{ chart_labels|tojson }};
+  const salesData = {{ chart_data|tojson }};
+
+  const ctx = document.getElementById("salesChart").getContext("2d");
+  new Chart(ctx, {
+    type: "line",
+    data: {
+      labels: salesLabels,
+      datasets: [
+        {
+          label: "Revenue (USD)",
+          data: salesData,
+          tension: 0.3,
+          fill: true,
+          borderWidth: 2,
+          // letting Chart.js pick default colors, I don't want to overcomplicate.
+        },
+      ],
+    },
+    options: {
+      responsive: true,
+      scales: {
+        y: {
+          beginAtZero: true,
+        },
+      },
+      plugins: {
+        legend: {
+          display: true,
+        },
+      },
+    },
+  });
+</script>
+{% endif %}
+{% endblock %}

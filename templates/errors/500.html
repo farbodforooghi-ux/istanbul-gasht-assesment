@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+
+{% block page_title %}Something went wrong{% endblock %}
+
+{% block content %}
+<div class="max-w-md mx-auto text-center mt-16">
+  <h2 class="text-2xl font-semibold mb-2">Something went wrong</h2>
+  <p class="text-sm text-slate-500 mb-4">
+    The server had a small issue handling your request. Nothing critical, just
+    try again or go back to the dashboard.
+  </p>
+  <a
+    href="{{ url_for('dashboard') }}"
+    class="inline-flex items-center px-4 py-2 rounded-lg bg-slate-900 text-slate-50 text-sm hover:bg-slate-800"
+    >Back to dashboard</a
+  >
+</div>
+{% endblock %}
