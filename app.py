@@ -180,7 +180,7 @@ def create_app():
             db.session.add(product)
             db.session.commit()
 
-            app.log_activity("product_created", f'Product "{product.name}" was created.')
+            app.log_activity("product_created", 'Product "{product.name}" was created.')
 
             flash("Product created successfully.", "success")
             return redirect(url_for("list_products"))
@@ -231,7 +231,8 @@ def create_app():
 
             db.session.commit()
 
-            app.log_activity("product_edited", f'Product "{product.name}" was updated.')
+            app.log_activity("product_created", f'Product "{product.name}" was created.')
+
 
             flash("Product updated successfully.", "success")
             return redirect(url_for("list_products"))
@@ -305,17 +306,25 @@ def create_app():
 
     # -------------- Init DB route for Render (no shell) --------------
 
+        # -------------- Init DB route for Render (no shell) --------------
+
     @app.route("/init-db")
     def init_db_route():
         # This route is just to initialize the DB on Render free plan.
-        # You can hit it once in the browser, then optionally remove it.
+        # You can hit it once in the browser. If it's already initialized, it will not duplicate things.
         try:
-            db.drop_all()
+            # Make sure tables exist
             db.create_all()
+
+            # If admin already exists, assume DB is initialized and bail out nicely
+            existing_admin = AdminUser.query.first()
+            if existing_admin:
+                return "Database already initialized. Nothing to do."
 
             # Create admin
             admin = AdminUser(
-                name="Istanbul Gasht Admin", email="admin@istanbulgasht.com"
+                name="Istanbul Gasht Admin",
+                email="admin@istanbulgasht.com"
             )
             db.session.add(admin)
 
