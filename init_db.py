@@ -1,6 +1,5 @@
 # init_db.py
 # Quick script to create the database and add some example data.
-# I would run this once locally and maybe once on the server.
 
 from datetime import date, timedelta
 from app import create_app
@@ -46,10 +45,9 @@ with app.app_context():
     today = date.today()
     products = [p1, p2, p3]
 
-    # I'm just faking some orders so the chart and KPIs don't look empty.
     for i in range(14):
         day = today - timedelta(days=i)
-        # create 0 to 3 orders per day, very simple
+       
         for j in range(i % 3):
             product = products[j % len(products)]
             quantity = (j + 1)
